@@ -46,11 +46,12 @@ getPublicIpAddress() {
     CLOUD_FLARE_IP_LEN=${#CLOUD_FLARE_IP}
 
     # if using cloud flare fails, try opendns (some ISPs block 1.1.1.1)
-    IP_ADDRESS=$([ $CLOUD_FLARE_IP_LEN -gt 15 ] && echo $(dig +short myip.opendns.com @resolver1.opendns.com +time=3) || echo "$CLOUD_FLARE_IP")
+    IP_ADDRESS=$([ $CLOUD_FLARE_IP_LEN -gt 15 ] && echo $(dig o-o.myaddr.l.google.com txt @ns2.google.com +short +time=3) || echo "$CLOUD_FLARE_IP")
 
     # if dns method fails, use http method
     if [ "$IP_ADDRESS" = "" ]; then
-      IP_ADDRESS=$(curl -sf4 https://ipinfo.io | jq -r '.ip')
+      INTERFACE_NAME=${INTERFACE_NAME:=eth0}
+      IP_ADDRESS=$(curl --interface eth0 -sf4 https://ipinfo.io | jq -r '.ip')
     fi
 
     echo $IP_ADDRESS
@@ -60,7 +61,8 @@ getPublicIpAddress() {
 
     # if dns method fails, use http method
     if [ "$IP_ADDRESS" = "" ]; then
-      IP_ADDRESS=$(curl -sf6 https://ifconfig.co)
+      INTERFACE_NAME=${INTERFACE_NAME:=eth0}
+      IP_ADDRESS=$(curl --interface eth0 -sf6 https://ifconfig.co)
     fi
 
     echo $IP_ADDRESS
